@@ -1,1 +1,1 @@
-x = "hello"
+print("hello world 2")
