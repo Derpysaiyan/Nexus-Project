@@ -1,0 +1,17 @@
+{% extends 'store/base.html' %}
+{% block content %}
+<h1>{{ product.brand }} {{ product.name }}</h1>
+<p>{{ product.description }}</p>
+<ul>
+  {% for s in product.skus.all %}
+    <li>
+      {{ s.storage }} — {{ s.color }} —
+      ${{ s.price.sale_price|default:s.price.list_price }}
+      <form action="/cart/add/{{ s.id }}/" method="post" style="display:inline">
+        {% csrf_token %}
+        <button class="btn" type="submit">Add to Cart</button>
+      </form>
+    </li>
+  {% endfor %}
+</ul>
+{% endblock %}
