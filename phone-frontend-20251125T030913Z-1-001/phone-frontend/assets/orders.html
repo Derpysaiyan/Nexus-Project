@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Your Orders — Nexus</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="Nexus Logo.jpeg" type="image/jpeg">
+</head>
+<body data-page="orders">
+  
+  <header class="nav">
+    <div class="container nav-inner">
+      <a class="brand" href="catalog.html">
+        <img src="Nexus Logo.jpeg" alt="Nexus logo" />
+        <span>Nexus</span>
+      </a>
+
+      <div class="nav-actions">
+        <a href="orders.html" class="nav-link">
+          Returns &amp; Orders
+        </a>
+
+        <a href="cart.html" class="nav-link cart-link">
+          <img src="cartlogo.jpeg" alt="Cart" class="cart-icon-small">
+          <span>Cart</span>
+          <span class="cart-count js-cart-count">0</span>
+        </a>
+
+        <button class="btn logout-btn js-logout" type="button">
+  Logout
+</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="orders-main">
+    <div class="container">
+      <h1 class="orders-title">Your Orders</h1>
+
+      <div id="ordersContent" class="orders-content">
+        
+      </div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
