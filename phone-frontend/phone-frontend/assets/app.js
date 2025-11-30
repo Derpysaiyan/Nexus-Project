@@ -129,119 +129,8 @@ function initLogin() {
 
 
 function initCatalog() {
-  const products = [
-    
-    {
-      id: 1,
-      name: "iPhone 15 128GB",
-      brand: "Apple",
-      price: 899,
-      rating: 4.8,
-      reviews: 312,
-      image: "Iphone15_128gb.jpg",
-    },
-    {
-      id: 2,
-      name: "iPhone 15 256GB",
-      brand: "Apple",
-      price: 999,
-      rating: 4.7,
-      reviews: 184,
-      image: "Iphone15_256gb.jpg",
-    },
-    {
-      id: 3,
-      name: "iPhone 15 Pro 128GB",
-      brand: "Apple",
-      price: 1099,
-      rating: 4.9,
-      reviews: 420,
-      image: "Iphone15pro_128gb.jpg",
-    },
-    {
-      id: 4,
-      name: "iPhone 15 Pro 256GB",
-      brand: "Apple",
-      price: 1199,
-      rating: 4.9,
-      reviews: 260,
-      image: "Iphone15pro_256gb.webp",
-    },
-    {
-      id: 5,
-      name: "iPhone 14 128GB",
-      brand: "Apple",
-      price: 749,
-      rating: 4.6,
-      reviews: 350,
-      image: "Iphone14_128gb.jpg",
-    },
-    {
-      id: 6,
-      name: "iPhone 14 Plus 128GB",
-      brand: "Apple",
-      price: 829,
-      rating: 4.6,
-      reviews: 210,
-      image: "Iphone14plus_128gb.jpeg",
-    },
-
-    {
-      id: 7,
-      name: "Galaxy S24 128GB",
-      brand: "Samsung",
-      price: 799,
-      rating: 4.7,
-      reviews: 198,
-      image: "GalaxyS24_128gb.jpg",
-    },
-    {
-      id: 8,
-      name: "Galaxy S24+ 256GB",
-      brand: "Samsung",
-      price: 999,
-      rating: 4.8,
-      reviews: 155,
-      image: "GalaxyS24plus_256gb.jpg",
-    },
-    {
-      id: 9,
-      name: "Galaxy S24 Ultra 256GB",
-      brand: "Samsung",
-      price: 1199,
-      rating: 4.9,
-      reviews: 402,
-      image: "GalaxyS24ultra_256gb.jpg",
-    },
-    {
-      id: 10,
-      name: "Galaxy A55 128GB",
-      brand: "Samsung",
-      price: 449,
-      rating: 4.5,
-      reviews: 120,
-      image: "GalaxyA55_128gb.jpg",
-    },
-    {
-      id: 11,
-      name: "Galaxy A35 128GB",
-      brand: "Samsung",
-      price: 379,
-      rating: 4.4,
-      reviews: 88,
-      image: "GalaxyA35_128gb.jpg",
-    },
-    {
-      id: 12,
-      name: "Galaxy Z Flip 5 256GB",
-      brand: "Samsung",
-      price: 999,
-      rating: 4.6,
-      reviews: 167,
-      image: "GalaxyZFlip5_256gb.jpg",
-    },
-  ];
-
+  // now products no longer static and gets data from backend
+  let products = [];  
 
   const grid = document.getElementById("productGrid");
   const brandFilter = document.getElementById("brandFilter");
@@ -267,18 +156,18 @@ function initCatalog() {
 
       card.innerHTML = `
         <div class="product-image-wrap">
-          <img src="${p.image}" alt="${p.name}" />
+          <img src="${p.Image}" alt="${p.Name}" />
         </div>
 
-        <h3 class="product-name">${p.name}</h3>
-        <p class="product-brand">${p.brand}</p>
+        <h3 class="product-name">${p.Name}</h3>
+        <p class="product-brand">${p.brand || ""}</p>
 
         <div class="product-rating">
           <span class="product-stars">★★★★☆</span>
-          <span class="product-reviews">${p.reviews}</span>
+          <span class="product-reviews">${p.Review_Count}</span>
         </div>
 
-        <div class="product-price">$${p.price.toFixed(2)}</div>
+        <div class="product-price">$${p.Price.toFixed(2)}</div>
 
         <div class="product-actions">
           <select class="product-qty">
@@ -304,7 +193,7 @@ function initCatalog() {
     });
   }
 
-  function applyFilters() {
+  function applyFilters() { 
     let list = [...products];
 
     const brandValue = brandFilter?.value || "all";
@@ -312,21 +201,21 @@ function initCatalog() {
     const searchValue = (searchInput?.value || "").toLowerCase().trim();
 
     if (brandValue !== "all") {
-      list = list.filter((p) => p.brand === brandValue);
+      list = list.filter((p) => p.Brand_ID === brandValue);
     }
 
     if (priceValue !== "all") {
       list = list.filter((p) => {
-        if (priceValue === "under-800") return p.price < 800;
-        if (priceValue === "800-1000") return p.price >= 800 && p.price <= 1000;
-        if (priceValue === "over-1000") return p.price > 1000;
+        if (priceValue === "under-800") return p.Price < 800;
+        if (priceValue === "800-1000") return p.Price >= 800 && p.Price <= 1000;
+        if (priceValue === "over-1000") return p.Price > 1000;
         return true;
       });
     }
 
     if (searchValue) {
       list = list.filter((p) =>
-        p.name.toLowerCase().includes(searchValue)
+        p.Name.toLowerCase().includes(searchValue)
       );
     }
 
@@ -337,8 +226,18 @@ function initCatalog() {
   priceFilter?.addEventListener("change", applyFilters);
   searchInput?.addEventListener("input", applyFilters);
 
-  applyFilters();
+  // Changes made here to fetch data 
+  fetch("http://127.0.0.1:5000/Products")
+    .then(res => res.json())
+    .then(data => {
+      products = data;
+      applyFilters();
+    })
+    .catch(err => {
+      console.error("Failed to load products:", err);
+    });
 }
+
 
 
 
