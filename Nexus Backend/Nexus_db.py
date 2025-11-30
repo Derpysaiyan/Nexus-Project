@@ -26,10 +26,8 @@ cur.execute("""
         CREATE TABLE IF NOT EXISTS Product(
         Product_ID INTEGER PRIMARY KEY,
         Brand_ID INTEGER,
-        Series TEXT,
         Name TEXT,
         Description TEXT,
-        Storage TEXT,
         Price REAL,
         Image TEXT,
         Stock_count INTEGER,

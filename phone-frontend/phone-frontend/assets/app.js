@@ -138,7 +138,7 @@ function initCatalog() {
       price: 899,
       rating: 4.8,
       reviews: 312,
-      image: "iphone15128GBBLue.jpg",
+      image: "Iphone15_128gb.jpg",
     },
     {
       id: 2,
@@ -147,7 +147,7 @@ function initCatalog() {
       price: 999,
       rating: 4.7,
       reviews: 184,
-      image: "iphone15256GBBlack.jpg",
+      image: "Iphone15_256gb.jpg",
     },
     {
       id: 3,
@@ -156,7 +156,7 @@ function initCatalog() {
       price: 1099,
       rating: 4.9,
       reviews: 420,
-      image: "iphone15Pro128GBNaturalTitanium.jpg",
+      image: "Iphone15pro_128gb.jpg",
     },
     {
       id: 4,
@@ -165,7 +165,7 @@ function initCatalog() {
       price: 1199,
       rating: 4.9,
       reviews: 260,
-      image: "iphone15Pro256GBBlueTitanium.webp",
+      image: "Iphone15pro_256gb.webp",
     },
     {
       id: 5,
@@ -174,7 +174,7 @@ function initCatalog() {
       price: 749,
       rating: 4.6,
       reviews: 350,
-      image: "iphone14128GBStarlight.jpg",
+      image: "Iphone14_128gb.jpg",
     },
     {
       id: 6,
@@ -183,10 +183,9 @@ function initCatalog() {
       price: 829,
       rating: 4.6,
       reviews: 210,
-      image: "iphone14Plus128GBMidnight.jpeg",
+      image: "Iphone14plus_128gb.jpeg",
     },
 
-    
     {
       id: 7,
       name: "Galaxy S24 128GB",
@@ -194,7 +193,7 @@ function initCatalog() {
       price: 799,
       rating: 4.7,
       reviews: 198,
-      image: "SamsungGalaxyS24128GBGraphite.jpg",
+      image: "GalaxyS24_128gb.jpg",
     },
     {
       id: 8,
@@ -203,7 +202,7 @@ function initCatalog() {
       price: 999,
       rating: 4.8,
       reviews: 155,
-      image: "Samsung-Galaxy-S24-Ultra-256GB-Titanium-Violet.jpg",
+      image: "GalaxyS24plus_256gb.jpg",
     },
     {
       id: 9,
@@ -212,7 +211,7 @@ function initCatalog() {
       price: 1199,
       rating: 4.9,
       reviews: 402,
-      image: "SamsungGalaxyS24Ultra256GBTitaniumGrey.jpg",
+      image: "GalaxyS24ultra_256gb.jpg",
     },
     {
       id: 10,
@@ -221,7 +220,7 @@ function initCatalog() {
       price: 449,
       rating: 4.5,
       reviews: 120,
-      image: "GalaxyA55128GBAwesomeNavy.jpg",
+      image: "GalaxyA55_128gb.jpg",
     },
     {
       id: 11,
@@ -230,7 +229,7 @@ function initCatalog() {
       price: 379,
       rating: 4.4,
       reviews: 88,
-      image: "GalaxyA35128GBAwesomeNavy.jpg",
+      image: "GalaxyA35_128gb.jpg",
     },
     {
       id: 12,
@@ -239,9 +238,10 @@ function initCatalog() {
       price: 999,
       rating: 4.6,
       reviews: 167,
-      image: "GalaxyZFlip5256GBGraphite.jpg",
+      image: "GalaxyZFlip5_256gb.jpg",
     },
   ];
+
 
   const grid = document.getElementById("productGrid");
   const brandFilter = document.getElementById("brandFilter");
@@ -370,7 +370,7 @@ function initCartPage() {
       const lineTotal = item.price * item.qty;
       subtotal += lineTotal;
 
-      const imgSrc = item.image || "iphone15128GBBLue.jpg";
+      const imgSrc = item.image || "Iphone15_128gb.jpg";
 
       row.innerHTML = `
         <div class="cart-row-left">
@@ -468,7 +468,7 @@ function initCheckoutPage() {
     subtotal += lineTotal;
     totalQty += item.qty;
 
-    const imgSrc = item.image || "iphone15128GBBLue.jpg";
+    const imgSrc = item.image || "Iphone15_128gb.jpg";
 
     const row = document.createElement("article");
     row.className = "checkout-item";
@@ -674,7 +674,7 @@ function initOrdersPage() {
       let itemsHtml = "";
       if (Array.isArray(order.items)) {
         order.items.forEach((item) => {
-          const imgSrc = item.image || "iphone15128GBBLue.jpg";
+          const imgSrc = item.image || "Iphone15_128gb.jpg";
           itemsHtml += `
             <div class="order-item-row">
               <div class="order-item-image">
