@@ -160,7 +160,7 @@ function initCatalog() {
         </div>
 
         <h3 class="product-name">${p.Name}</h3>
-        <p class="product-brand">${p.brand || ""}</p>
+        <p class="product-brand">${p.BrandName || ""}</p>
 
         <div class="product-rating">
           <span class="product-stars">★★★★☆</span>
@@ -201,7 +201,7 @@ function initCatalog() {
     const searchValue = (searchInput?.value || "").toLowerCase().trim();
 
     if (brandValue !== "all") {
-      list = list.filter((p) => p.Brand_ID === brandValue);
+      list = list.filter((p) => p.BrandName_ID === brandValue);
     }
 
     if (priceValue !== "all") {

@@ -19,7 +19,9 @@ def get_products():
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
 
-    cur.execute("SELECT * FROM Product")
+    cur.execute("""SELECT Product.*, Brand.Name AS BrandName
+                FROM Product
+                JOIN Brand ON Product.Brand_ID = Brand.Brand_ID""")
     rows = cur.fetchall()
 
     conn.close()
