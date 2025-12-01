@@ -137,6 +137,157 @@ def delete_product(product_id):
 
     return jsonify({"message": "Product deleted successfully"})
 
+#TO DO LIST
+
+#Brand
+""""
+GET /Brand
+
+GET /Brand/<id>
+
+POST /Brand
+
+PUT /Brand/<id>
+
+DELETE /Brand/<id>
+
+"""
+# get brands multiple
+@app.route("/Brands")
+def get_brands():
+    conn = sqlite3.connect('Nexus.db')
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM Brand")
+    rows = cur.fetchall()
+
+    conn.close()
+
+    return jsonify([dict(row) for row in rows])
+
+# get brand singular
+@app.route("/Brands/<int:brand_id>", methods=["GET"])
+def get_brand(brand_id):
+    conn = sqlite3.connect('Nexus.db')
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM Brand WHERE Brand_ID = ?", (brand_id,))
+    row = cur.fetchone()
+
+    conn.close()
+
+    if row is None:
+        return jsonify({"error": "Brand cannot be found"}), 404
+    
+    return jsonify(dict(row))
+
+# post brands, create
+@app.route("/Brands", methods = ["POST"])
+def create_brand():
+    data = request.get_json()
+
+    name = data.get("Name")
+
+    conn = sqlite3.connect("Nexus.db")
+    cur = conn.cursor()
+
+    cur.execute("""
+            INSERT INTO Brand (Name)
+            VALUES(?)
+             """, (name,))
+
+    conn.commit()    
+    conn.close()
+
+    return jsonify({"message": "Brand was Created succesfully"}), 201
+
+# put in new data to update brand
+@app.route("/Brands/<int:brand_id>", methods = ["PUT"])
+def update_brands(brand_id):
+    data = request.get_json()
+    conn = sqlite3.connect('Nexus.db')
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    
+    cur.execute("SELECT * FROM Brand WHERE Brand_ID = ?",(brand_id))
+    if cur.fetchone() is None:
+        return jsonify({"error": "Brand not found"}), 404
+
+    # Update the product
+    cur.execute("""
+        UPDATE Brand
+        SET Name = ?
+        WHERE Brand_ID = ?
+    """, (
+        data.get("Name"),
+        brand_id
+    ))
+    conn.commit()
+    conn.close()
+
+    return jsonify({"message": "Brand updated successfully"})
+
+
+# Delete the Brand
+@app.route("/Brands/<int:brand_id>", methods = ["DELETE"])
+def delete_brand(brand_id):
+    conn = sqlite3.connect('Nexus.db')
+    cur = conn.cursor()
+
+    # Check if product exists
+    cur.execute("SELECT * FROM Brand WHERE Brand_ID = ?", (brand_id,))
+    if cur.fetchone() is None:
+        return jsonify({"error": "Brand can not be found"}), 404
+
+    # Delete product
+    cur.execute("DELETE FROM Brand WHERE Brand_ID = ?", (brand_id,))
+    conn.commit()
+    conn.close()
+
+    return jsonify({"message": "Brand deleted successfully"})
+
+#User
+"""
+POST /Users
+
+POST /Login
+
+GET /Users/<id>
+
+PUT /Users/<id>
+
+DELETE /Users/<id>
+"""
+
+
+
+
+
+
+
+#Orders
+"""
+POST /Orders
+
+GET /Orders/<id>
+
+GET /Orders/user/<user_id>
+
+DELETE /Orders/<id>
+"""
+#History/order Items
+"""
+GET /History/<user_id>
+(returns all orders + items)
+"""
+
+
+
+
+
+
 
 
 
