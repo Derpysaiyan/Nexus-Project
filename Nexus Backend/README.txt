@@ -6,7 +6,7 @@ if using git bash
 1. cd "Nexus Backend" 
 Ensures your Terminal is in the correct spot
 
-2. pip install -r requirments.txt
+2. pip install -r requirements.txt
 All the needed files
 
 3. python app.py
