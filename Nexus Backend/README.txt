@@ -4,7 +4,7 @@ Open the Terminal in the Nexus Backend Folder
 1. cd "Nexus Backend" 
 Ensures your Terminal is in the correct spot
 
-2. pip intsall -r requirments.txt
+2. pip install -r requirments.txt
 All the needed files
 
 3. python app.py
