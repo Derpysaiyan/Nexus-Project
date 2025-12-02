@@ -293,7 +293,7 @@ def create_user():
     return jsonify({"message": "User was Created succesfully"}), 201
 
 
-#login
+#login information
 @app.route("/Login", methods = ["POST"])
 def login():
     data = request.get_json()
@@ -323,8 +323,90 @@ def login():
         "Role": user["Role"]
     }), 200
 
+# get Users multiple
+@app.route("/Users", methods = ["GET"])
+def get_users():
+    conn = sqlite3.connect("Nexus.db")
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
 
+    cur.execute("""SELECT * FROM User""")
+    rows = cur.fetchall()
 
+    conn.close()
+    return jsonify([dict(row) for row in rows])
+
+# Get User singular
+
+@app.route("/Users/<int:user_id>", methods=["GET"])
+def get_user(user_id):
+    conn = sqlite3.connect("Nexus.db")
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("""SELECT * FROM User WHERE User_ID = ?""",(user_id,))
+    row = cur.fetchone()
+
+    conn.close()
+
+    if row is None:
+        return jsonify({"error": "Userr not found"}), 404
+    return jsonify(dict(row))
+
+# update user information 
+@app.route("/Users/<int:user_id>", methods = ["PUT"])
+def update_user(user_id):
+    data = request.get_json()
+    conn = sqlite3.connect('Nexus.db')
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    
+
+    cur.execute("SELECT * FROM User WHERE User_ID = ?",(user_id,))
+    if cur.fetchone() is None:
+        conn.close()
+        return jsonify({"error": "User can not be found"}), 404
+
+    # Update
+    try:
+        cur.execute("""
+            UPDATE User
+            SET Name = ?, Email = ?, Password = ?, Role = ?
+            WHERE User_ID = ?
+        """, (
+            data.get("Name"),
+            data.get("Email"),
+            data.get("Password"),
+            data.get("Role"),
+            user_id
+        ))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({"message": "User updated successfully"}),200
+    
+    except sqlite3.IntegrityError:
+        conn.close()
+        return jsonify({"error": "Email is already in use"}),400
+    
+
+@app.route("/Users/<int:user_id>", methods=["DELETE"])
+def delete_user(user_id):
+    conn = sqlite3.connect('Nexus.db')
+    cur = conn.cursor()
+
+    # Check if user exists
+    cur.execute("SELECT * FROM User WHERE User_ID = ?", (user_id,))
+    if cur.fetchone() is None:
+        conn.close()
+        return jsonify({"error": "User not found"}), 404
+
+    # Delete user
+    cur.execute("DELETE FROM User WHERE User_ID = ?", (user_id,))
+    conn.commit()
+    conn.close()
+
+    return jsonify({"message": "User deleted successfully"})
 
 #Orders
 """
@@ -336,6 +418,11 @@ GET /Orders/user/<user_id>
 
 DELETE /Orders/<id>
 """
+
+
+
+
+
 
 
 
