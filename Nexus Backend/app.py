@@ -248,21 +248,80 @@ def delete_brand(brand_id):
 
     return jsonify({"message": "Brand deleted successfully"})
 
+
 #User
 """
-POST /Users
+POST  /Users  
 
-POST /Login
+POST  /Login        
 
-GET /Users/<id>
+GET   /Users         
 
-PUT /Users/<id>
+GET   /Users/<id>    
+
+PUT   /Users/<id>
 
 DELETE /Users/<id>
+
 """
+# create users
+@app.route("/Users", methods = ["POST"])
+def create_user():
+    data = request.get_json()
+
+    name = data.get("Name")
+    email = data.get("Email")
+    password = data.get("Password")
+    role = data.get("Role")
+
+    conn = sqlite3.connect("Nexus.db")
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            INSERT INTO User (Name, Email, Password, Role) 
+            VALUES(?,?,?,?)
+            """, (name,email,password,role,))
+        conn.commit()
+
+    except sqlite3.IntegrityError:
+        return jsonify({"error": "Email already in use"}), 400
+    
+
+    finally:
+        conn.close()
+
+    return jsonify({"message": "User was Created succesfully"}), 201
 
 
+#login
+@app.route("/Login", methods = ["POST"])
+def login():
+    data = request.get_json()
 
+    email = data.get("Email")
+    password = data.get("Password")
+
+    conn = sqlite3.connect("Nexus.db")
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("Select * FROM User WHERE Email = ?", (email,))
+    user = cur.fetchone()
+    conn.close()
+
+    if user is None:
+        return jsonify({"error": "Email or Password is Invalid"}),401
+
+    if password != user["Password"]:
+        return jsonify({"error": "Invalid email or Password"}),401
+
+
+    return jsonify({
+        "message": "Login succesful",
+        "User_ID": user["User_ID"],
+        "Name": user["Name"],
+        "Role": user["Role"]
+    }), 200
 
 
 
@@ -277,6 +336,10 @@ GET /Orders/user/<user_id>
 
 DELETE /Orders/<id>
 """
+
+
+
+
 #History/order Items
 """
 GET /History/<user_id>
