@@ -2,6 +2,13 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import sqlite3
+# 200 is good
+# 400 is bad request
+# 401 is unathorized 
+# 402 is payment req
+# 404 is Not found error
+# 409 is conflict
+# 500 is internal server
 
 app = Flask(__name__)
 CORS(app)
@@ -236,12 +243,12 @@ def delete_brand(brand_id):
     conn = sqlite3.connect('Nexus.db')
     cur = conn.cursor()
 
-    # Check if product exists
+    # Check if Brand exists
     cur.execute("SELECT * FROM Brand WHERE Brand_ID = ?", (brand_id,))
     if cur.fetchone() is None:
         return jsonify({"error": "Brand can not be found"}), 404
 
-    # Delete product
+    # Delete BRand
     cur.execute("DELETE FROM Brand WHERE Brand_ID = ?", (brand_id,))
     conn.commit()
     conn.close()
@@ -350,7 +357,7 @@ def get_user(user_id):
     conn.close()
 
     if row is None:
-        return jsonify({"error": "Userr not found"}), 404
+        return jsonify({"error": "User not found"}), 404
     return jsonify(dict(row))
 
 # update user information 
@@ -388,8 +395,8 @@ def update_user(user_id):
     except sqlite3.IntegrityError:
         conn.close()
         return jsonify({"error": "Email is already in use"}),400
-    
 
+# dete the User
 @app.route("/Users/<int:user_id>", methods=["DELETE"])
 def delete_user(user_id):
     conn = sqlite3.connect('Nexus.db')
@@ -408,16 +415,169 @@ def delete_user(user_id):
 
     return jsonify({"message": "User deleted successfully"})
 
-#Orders
 """
-POST /Orders
-
-GET /Orders/<id>
-
-GET /Orders/user/<user_id>
-
-DELETE /Orders/<id>
+expecting order data to look like
+{
+  "User_ID": 3,
+  "Total": 2499.97,
+  "Items": [
+    { "Product_ID": 1, "Quantity": 2, "Price": 999.99 },
+    { "Product_ID": 4, "Quantity": 1, "Price": 499.99 }
+  ]
+}
+makes a order row and take the ID to put in the OrderItems
 """
+# Create an order
+@app.route("/Orders", methods=["POST"])
+def create_order():
+    data = request.get_json()
+
+    user_id = data.get("User_ID")
+    items = data.get("Items") #list of phones[iphone2,samsung4]
+    total = data.get("Total")
+
+    if not user_id or not items or total is None:
+        return jsonify({"error": "Missing order fields"}), 400
+
+    conn = sqlite3.connect("Nexus.db")
+    cur = conn.cursor()
+
+    try:
+        # 1. Insert into Orders table
+        cur.execute("""
+            INSERT INTO Orders (User_ID, Total_price, Status)
+            VALUES (?, ?, ?)
+        """, (user_id, total, "Completed"))
+
+        order_id = cur.lastrowid  # GET the generated Order_ID for OrderItems
+
+        # 2. Insert each order into orderItens
+        for item in items:
+            cur.execute("""
+                INSERT INTO OrderItem (Order_ID, Product_ID, Quantity, Price)
+                VALUES (?, ?, ?, ?)
+            """, (
+                order_id,
+                item["Product_ID"],
+                item["Quantity"],
+                item["Price"]
+            ))
+            cur.execute("""
+                UPDATE Product
+                SET Stock_count = Stock_count - ?
+                WHERE Product_ID = ?""", 
+                (item["Quantity"], item["Product_ID"]))
+
+        conn.commit()
+
+    finally:
+        conn.close()
+
+    return jsonify({
+        "message": "Order created successfully",
+        "Order_ID": order_id
+    }), 201
+
+
+# get a singular order's items
+@app.route("/Orders/<int:order_id>", methods=["GET"])
+def get_order(order_id):
+    conn = sqlite3.connect("Nexus.db")
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT * FROM Orders WHERE Order_ID = ?
+    """, (order_id,))
+    order = cur.fetchone()
+
+    if order is None:
+        conn.close()
+        return jsonify({"error": "Order not found"}), 404
+
+    # Get order items and products
+    cur.execute("""
+        SELECT OI.*, P.Name, P.Image 
+        FROM OrderItem OI
+        JOIN Product P ON OI.Product_ID = P.Product_ID
+        WHERE OI.Order_ID = ?
+    """, (order_id,))
+    items = [dict(row) for row in cur.fetchall()]
+
+    conn.close()
+
+    order_dict = dict(order)
+    order_dict["Items"] = items
+
+    return jsonify(order_dict), 200
+
+# All orders on a user
+@app.route("/Orders/user/<int:user_id>", methods=["GET"])
+def get_orders_by_user(user_id):
+    conn = sqlite3.connect("Nexus.db")
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    # Get all orders for user
+    cur.execute("""
+        SELECT * FROM Orders WHERE User_ID = ?
+    """, (user_id,))
+    orders = cur.fetchall()
+    #empty
+    if not orders:
+        conn.close()
+        return jsonify([]), 200
+
+    # Build list including items
+    results = []
+
+    for order in orders:
+        order_id = order["Order_ID"]
+
+        # Get each item's product details
+        cur.execute("""
+            SELECT OI.*, P.Name, P.Image 
+            FROM OrderItem OI
+            JOIN Product P ON OI.Product_ID = P.Product_ID
+            WHERE OI.Order_ID = ?
+        """, (order_id,))
+        items = [dict(row) for row in cur.fetchall()]
+
+        order_dict = dict(order)
+        order_dict["Items"] = items
+        results.append(order_dict)
+
+    conn.close()
+    return jsonify(results), 200
+
+# Delete an order entirely
+@app.route("/Orders/<int:order_id>", methods=["DELETE"])
+def delete_order(order_id):
+    conn = sqlite3.connect("Nexus.db")
+    cur = conn.cursor()
+
+    # Check if order exists
+    cur.execute("SELECT * FROM Orders WHERE Order_ID = ?", (order_id,))
+    if cur.fetchone() is None:
+        conn.close()
+        return jsonify({"error": "Order not found"}), 404
+
+    # Remove order items first
+    cur.execute("DELETE FROM OrderItem WHERE Order_ID = ?", (order_id,))
+    
+    # Remove order
+    cur.execute("DELETE FROM Orders WHERE Order_ID = ?", (order_id,))
+    conn.commit()
+    conn.close()
+
+    return jsonify({"message": "Order deleted successfully"}), 200
+
+
+
+# Order history
+@app.route("/History/<int:user_id>", methods=["GET"])
+def get_history(user_id):
+    return get_orders_by_user(user_id)
 
 
 
