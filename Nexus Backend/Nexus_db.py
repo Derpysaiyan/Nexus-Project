@@ -1,7 +1,7 @@
 import sqlite3
 # Creates the Database Tables using SQLite commands
 
-DB = sqlite3.connect('Nexus Backend/Nexus.db')
+DB = sqlite3.connect('Nexus.db')
 
 cur = DB.cursor()
 #User

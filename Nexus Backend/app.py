@@ -2,6 +2,7 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import sqlite3
+
 # 200 is good
 # 400 is bad request
 # 401 is unathorized 
@@ -11,7 +12,7 @@ import sqlite3
 # 500 is internal server
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 #test route 
 @app.route("/")

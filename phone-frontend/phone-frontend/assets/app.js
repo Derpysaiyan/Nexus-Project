@@ -2,18 +2,37 @@ function wireLogoutButtons() {
   const logoutButtons = document.querySelectorAll('.js-logout');
   logoutButtons.forEach((btn) => {
     btn.addEventListener('click', () => {
-      
+      clearUser();   // remove stored user
+      cart = [];     // clear cart
+      saveCart();
 
-      
       window.location.href = 'login.html';
     });
   });
 }
 
 
+
 let cart = [];
 
+function loadUser() {
+  try {
+    const raw = localStorage.getItem("nexusUser");
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}
 
+function saveUser(user) {
+  try {
+    localStorage.setItem("nexusUser", JSON.stringify(user));
+  } catch (e) {}
+}
+
+function clearUser() {
+  localStorage.removeItem("nexusUser");
+}
 
 function loadCart() {
   try {
@@ -111,26 +130,44 @@ function initLogin() {
   form.addEventListener("submit", (e) => {
     e.preventDefault();
 
-    if (form.checkValidity()) {
-      if (errorMsg) errorMsg.style.display = "none";
-      
-      window.location.href = "catalog.html";
-    } else {
-      if (errorMsg) {
-        errorMsg.textContent =
-          "Please enter a valid email and a stronger password.";
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+
+    fetch("http://127.0.0.1:5000/Login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ Email: email, Password: password })
+    })
+      .then(res => res.json().then(data => ({ status: res.status, data })))
+      .then(result => {
+        if (result.status !== 200) {
+          errorMsg.textContent = result.data.error || "Invalid login.";
+          errorMsg.style.display = "block";
+          return;
+        }
+
+        // Save login
+        saveUser({
+          User_ID: result.data.User_ID,
+          Name: result.data.Name,
+          Role: result.data.Role
+        });
+
+        errorMsg.style.display = "none";
+        window.location.href = "catalog.html";
+      })
+      .catch(() => {
+        errorMsg.textContent = "Server error. Try again later.";
         errorMsg.style.display = "block";
-      }
-      form.reportValidity();
-    }
+      });
   });
 }
 
 
 
+
 function initCatalog() {
-  // now products no longer static and gets data from backend
-  let products = [];  
+  let products = [];
 
   const grid = document.getElementById("productGrid");
   const brandFilter = document.getElementById("brandFilter");
@@ -141,6 +178,7 @@ function initCatalog() {
 
   if (!grid) return;
 
+  
   function renderProducts(list) {
     grid.innerHTML = "";
 
@@ -156,18 +194,18 @@ function initCatalog() {
 
       card.innerHTML = `
         <div class="product-image-wrap">
-          <img src="${p.Image}" alt="${p.Name}" />
+          <img src="${p.image}" alt="${p.name}" />
         </div>
 
-        <h3 class="product-name">${p.Name}</h3>
-        <p class="product-brand">${p.BrandName || ""}</p>
+        <h3 class="product-name">${p.name}</h3>
+        <p class="product-brand">${p.brand}</p>
 
         <div class="product-rating">
           <span class="product-stars">★★★★☆</span>
-          <span class="product-reviews">${p.Review_Count}</span>
+          <span class="product-reviews">${p.reviews}</span>
         </div>
 
-        <div class="product-price">$${p.Price.toFixed(2)}</div>
+        <div class="product-price">$${p.price.toFixed(2)}</div>
 
         <div class="product-actions">
           <select class="product-qty">
@@ -193,7 +231,8 @@ function initCatalog() {
     });
   }
 
-  function applyFilters() { 
+  
+  function applyFilters() {
     let list = [...products];
 
     const brandValue = brandFilter?.value || "all";
@@ -201,21 +240,22 @@ function initCatalog() {
     const searchValue = (searchInput?.value || "").toLowerCase().trim();
 
     if (brandValue !== "all") {
-      list = list.filter((p) => p.BrandName_ID === brandValue);
+      list = list.filter((p) => p.brand.trim().toLowerCase() === brandValue.trim().toLowerCase());
     }
-
+    
     if (priceValue !== "all") {
       list = list.filter((p) => {
-        if (priceValue === "under-800") return p.Price < 800;
-        if (priceValue === "800-1000") return p.Price >= 800 && p.Price <= 1000;
-        if (priceValue === "over-1000") return p.Price > 1000;
+        if (priceValue === "under-800") return p.price < 800;
+        if (priceValue === "800-1000") return p.price >= 800 && p.price <= 1000;
+        if (priceValue === "over-1000") return p.price > 1000;
         return true;
       });
     }
 
+    
     if (searchValue) {
       list = list.filter((p) =>
-        p.Name.toLowerCase().includes(searchValue)
+        p.name.toLowerCase().includes(searchValue)
       );
     }
 
@@ -226,17 +266,27 @@ function initCatalog() {
   priceFilter?.addEventListener("change", applyFilters);
   searchInput?.addEventListener("input", applyFilters);
 
-  // Changes made here to fetch data 
+  
   fetch("http://127.0.0.1:5000/Products")
     .then(res => res.json())
     .then(data => {
-      products = data;
+      // convert backend fields to frontend fields
+      products = data.map(p => ({
+        id: p.Product_ID,
+        name: p.Name,
+        brand: p.BrandName,
+        price: p.Price,
+        image: p.Image,
+        reviews: p.Review_Count
+      }));
+
       applyFilters();
     })
     .catch(err => {
       console.error("Failed to load products:", err);
     });
 }
+
 
 
 
