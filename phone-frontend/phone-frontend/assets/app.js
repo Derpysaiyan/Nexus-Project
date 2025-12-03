@@ -107,6 +107,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (page === "login") {
     initLogin();
+  } else if (page === "signup") {
+    initSignup();
   } else if (page === "catalog") {
     initCatalog();
   } else if (page === "cart") {
@@ -158,6 +160,48 @@ function initLogin() {
       })
       .catch(() => {
         errorMsg.textContent = "Server error. Try again later.";
+        errorMsg.style.display = "block";
+      });
+  });
+}
+
+function initSignup() {
+  const form = document.getElementById("signupForm");
+  if (!form) return;
+
+  const errorMsg = document.getElementById("signupErr");
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+
+    fetch("http://127.0.0.1:5000/Signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ Name: name, Email: email, Password: password })
+    })
+      .then(res => res.json().then(data => ({ status: res.status, data })))
+      .then(result => {
+        if (result.status !== 200) {
+          errorMsg.textContent = result.data.error || "Unable to sign up.";
+          errorMsg.style.display = "block";
+          return;
+        }
+
+        // Save user immediately after signup
+        saveUser({
+          User_ID: result.data.User_ID,
+          Name: result.data.Name,
+          Role: result.data.Role
+        });
+
+        window.location.href = "catalog.html";
+      })
+      .catch(() => {
+        errorMsg.textContent = "Server error. Try again.";
         errorMsg.style.display = "block";
       });
   });

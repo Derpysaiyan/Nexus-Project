@@ -580,6 +580,44 @@ def delete_order(order_id):
 def get_history(user_id):
     return get_orders_by_user(user_id)
 
+@app.route("/Signup", methods=["POST"])
+def signup():
+    data = request.get_json()
+
+    name = data.get("Name")
+    email = data.get("Email")
+    password = data.get("Password")
+
+    conn = sqlite3.connect("Nexus.db")
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    # check if email already exists
+    cur.execute("SELECT * FROM User WHERE Email = ?", (email,))
+    existing = cur.fetchone()
+
+    if existing:
+        conn.close()
+        return jsonify({"error": "Email already registered"}), 400
+
+    # insert new user
+    cur.execute("""
+        INSERT INTO User (Name, Email, Password, Role)
+        VALUES (?, ?, ?, 'customer')
+    """, (name, email, password))
+
+    conn.commit()
+
+    # return user info
+    new_id = cur.lastrowid
+
+    conn.close()
+
+    return jsonify({
+        "User_ID": new_id,
+        "Name": name,
+        "Role": "customer"
+    }), 200
 
 
 
