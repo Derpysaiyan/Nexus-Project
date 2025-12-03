@@ -1,0 +1,9 @@
+services:
+  - type: web       # You're deploying a web API, not a worker or static site
+    name: nexus-backend   # The name you want to see on Render dashboard
+    runtime: python       # Tell Render you’re using Python
+    buildCommand: pip install -r requirements.txt   # Install dependencies
+    startCommand: gunicorn app:app                  # Start your server
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10
