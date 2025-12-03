@@ -550,38 +550,50 @@ function initCheckoutPage() {
   updateSummaryValues();
 
   
-  placeOrderBtn.addEventListener("click", () => {
-    const shipping = computeShipping();
-    const beforeTax = subtotal + shipping;
-    const tax = beforeTax * taxRate;
-    const total = beforeTax + tax;
+placeOrderBtn.addEventListener("click", () => {
+  const user = loadUser();
+  if (!user) {
+    alert("You must be logged in to place an order.");
+    window.location.href = "login.html";
+    return;
+  }
 
-    const orders = loadOrders();
-    const orderId = "NX-" + Date.now().toString(36);
+  // Builds the  backend order object
+  const orderPayload = {
+    User_ID: user.User_ID,
+    Total: Number(totalSpan.textContent.replace("$", "")),
+    Items: cart.map(item => ({
+      Product_ID: item.id,
+      Quantity: item.qty,
+      Price: item.price
+    }))
+  };
 
-    const order = {
-      id: orderId,
-      date: new Date().toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
-      subtotal,
-      shipping,
-      tax,
-      total,
-      items: cart.map((item) => ({ ...item })),
-    };
+  fetch("http://127.0.0.1:5000/Orders", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(orderPayload)
+  })
+    .then(res => res.json().then(data => ({ status: res.status, data })))
+    .then(result => {
+      if (result.status !== 201) {
+        alert(result.data.error || "Could not place your order.");
+        return;
+      }
 
-    orders.push(order);
-    saveOrders(orders);
+      // Order succeeded!
+      cart = [];
+      saveCart();
+      updateCartCount();
 
-    cart = [];
-    saveCart();
-    updateCartCount();
+      window.location.href = "orders.html";
+    })
+    .catch(() => {
+      alert("Server error. Try again later.");
+    });
+});
 
-    window.location.href = "orders.html";
-  });
+
 }
 
 
@@ -590,105 +602,84 @@ function initOrdersPage() {
   const container = document.getElementById("ordersContent");
   if (!container) return;
 
-  
-  cart = loadCart();
-  updateCartCount();
-
-  const orders = loadOrders();
-
-  if (!orders.length) {
-    container.innerHTML =
-      '<p class="orders-empty">You have no orders yet. Place an order from the catalog.</p>';
+  const user = loadUser();
+  if (!user) {
+    container.innerHTML = "<p>You must log in to see your orders.</p>";
     return;
   }
 
-  container.innerHTML = "";
+  cart = loadCart();
+  updateCartCount();
 
-  
-  orders
-    .slice()
-    .reverse()
-    .forEach((order) => {
-      const subtotal =
-        typeof order.subtotal === "number" ? order.subtotal : 0;
-      const shipping =
-        typeof order.shipping === "number" ? order.shipping : 0;
-      const tax = typeof order.tax === "number" ? order.tax : 0;
-      const total = typeof order.total === "number" ? order.total : subtotal;
+  fetch(`http://127.0.0.1:5000/Orders/user/${user.User_ID}`)
+    .then(res => res.json())
+    .then(orders => {
+      if (!orders.length) {
+        container.innerHTML =
+          '<p class="orders-empty">You have no orders yet. Place an order from the catalog.</p>';
+        return;
+      }
 
-      const card = document.createElement("article");
-      card.className = "order-card";
+      container.innerHTML = "";
 
-      
-      let itemsHtml = "";
-      if (Array.isArray(order.items)) {
-        order.items.forEach((item) => {
-          const imgSrc = item.image || "Iphone15_128gb.jpg";
+      // Latest first
+      orders.slice().reverse().forEach(order => {
+        const orderId = order.Order_ID;
+        const orderDate = order.Order_date?.split(" ")[0] || "Unknown date";
+
+        let itemsHtml = "";
+        order.Items.forEach(item => {
+          const imgSrc = item.Image || "Images/Iphone15_128gb.jpg";
           itemsHtml += `
             <div class="order-item-row">
               <div class="order-item-image">
-                <img src="${imgSrc}" alt="${item.name}">
+                <img src="${imgSrc}" alt="${item.Name}">
               </div>
               <div class="order-item-info">
-                <div class="order-item-name">${item.name}</div>
+                <div class="order-item-name">${item.Name}</div>
                 <div class="order-item-meta">
-                  ${item.brand || ""} &bull;
-                  Qty: ${item.qty || 1} &bull;
-                  $${item.price.toFixed(2)} each
+                  Qty: ${item.Quantity} &bull; $${item.Price.toFixed(2)} each
                 </div>
               </div>
             </div>
           `;
         });
-      }
 
-      card.innerHTML = `
-        <div class="order-card-header">
-          <div class="order-card-meta">
-            <div>
-              <span class="order-card-label">Order placed:</span>
-              <span>${order.date || ""}</span>
-            </div>
-            <div>
-              <span class="order-card-label">Order ID:</span>
-              <span>${order.id}</span>
-            </div>
-          </div>
-          <div class="order-card-total">
-            <div class="order-card-label">Order total:</div>
-            <div class="order-card-total-amount">$${total.toFixed(2)}</div>
-          </div>
-        </div>
+        const total = order.Total_price || 0;
 
-        <div class="order-card-body">
-          <div class="order-breakdown">
-            <div class="order-breakdown-line">
-              <span>Items subtotal:</span>
-              <span>$${subtotal.toFixed(2)}</span>
+        const card = document.createElement("article");
+        card.className = "order-card";
+        card.innerHTML = `
+          <div class="order-card-header">
+            <div class="order-card-meta">
+              <div>
+                <span class="order-card-label">Order placed:</span>
+                <span>${orderDate}</span>
+              </div>
+              <div>
+                <span class="order-card-label">Order ID:</span>
+                <span>${orderId}</span>
+              </div>
             </div>
-            <div class="order-breakdown-line">
-              <span>Shipping:</span>
-              <span>$${shipping.toFixed(2)}</span>
-            </div>
-            <div class="order-breakdown-line">
-              <span>Tax:</span>
-              <span>$${tax.toFixed(2)}</span>
-            </div>
-            <div class="order-breakdown-line order-breakdown-strong">
-              <span>Order total:</span>
-              <span>$${total.toFixed(2)}</span>
+            <div class="order-card-total">
+              <div class="order-card-label">Order total:</div>
+              <div class="order-card-total-amount">$${total.toFixed(2)}</div>
             </div>
           </div>
 
-          <div class="order-items-list">
-            ${itemsHtml}
+          <div class="order-card-body">
+            <div class="order-items-list">${itemsHtml}</div>
           </div>
-        </div>
-      `;
+        `;
 
-      container.appendChild(card);
+        container.appendChild(card);
+      });
+    })
+    .catch(() => {
+      container.innerHTML = "<p>Failed to load your orders.</p>";
     });
 }
+
 
 
 
