@@ -5,6 +5,7 @@ from flask_cors import CORS
 import sqlite3
 
 
+
 # 200 is good
 # 400 is bad request
 # 401 is unathorized 
@@ -625,23 +626,21 @@ def reset_database():
     if key != ADMIN_RESET_KEY:
         return jsonify({"error": "Unauthorized"}), 401
 
-    # Close DB connections
-    try:
-        import gc
-        gc.collect()
-    except:
-        pass
-
-    # Delete the existing DB
     db_path = "Nexus.db"
+
+    # delete the existing DB
     if os.path.exists(db_path):
         os.remove(db_path)
-    else:
-        return jsonify({"message": "Database did not exist. Creating new..."})
 
-    # Recreate DB + seed
+    # force recreation + seeding
+    import importlib
     import Nexus_db
     import seed_data
+
+    importlib.reload(Nexus_db)
+    importlib.reload(seed_data)
+
+    # table creation runs at import time
     seed_data.seed()
 
     return jsonify({"message": "Database has been RESET and RESEEDED."}), 200
