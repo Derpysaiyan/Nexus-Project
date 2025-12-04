@@ -15,6 +15,8 @@ import sqlite3
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
+ADMIN_RESET_KEY = os.environ.get("ADMIN_RESET_KEY", "dev-reset-key")
+
 
 # make the databse when booting up the live server
 def init_database():
@@ -228,7 +230,7 @@ def update_brands(brand_id):
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
     
-    cur.execute("SELECT * FROM Brand WHERE Brand_ID = ?",(brand_id))
+    cur.execute("SELECT * FROM Brand WHERE Brand_ID = ?",(brand_id,))
     if cur.fetchone() is None:
         return jsonify({"error": "Brand not found"}), 404
 
@@ -613,6 +615,39 @@ def signup():
         "Name": name,
         "Role": "customer"
     }), 200
+
+
+@app.route("/admin/reset-db", methods=["POST"])
+def reset_database():
+    data = request.get_json() or {}
+
+    key = data.get("key")
+    if key != ADMIN_RESET_KEY:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    # Close DB connections
+    try:
+        import gc
+        gc.collect()
+    except:
+        pass
+
+    # Delete the existing DB
+    db_path = "Nexus.db"
+    if os.path.exists(db_path):
+        os.remove(db_path)
+    else:
+        return jsonify({"message": "Database did not exist. Creating new..."})
+
+    # Recreate DB + seed
+    import Nexus_db
+    import seed_data
+    seed_data.seed()
+
+    return jsonify({"message": "Database has been RESET and RESEEDED."}), 200
+
+
+
 
 # Run DB initialization ONLY on Render and only once if it's doesn't exist
 if os.environ.get("RENDER") == "true":
