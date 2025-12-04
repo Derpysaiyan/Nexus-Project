@@ -135,7 +135,7 @@ function initLogin() {
     const email = document.getElementById("email").value.trim();
     const password = document.getElementById("password").value.trim();
 
-    fetch("http://127.0.0.1:5000/Login", {
+    fetch("https://nexus-project-webserver.onrender.com/Login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ Email: email, Password: password })
@@ -178,7 +178,7 @@ function initSignup() {
     const email = document.getElementById("email").value.trim();
     const password = document.getElementById("password").value.trim();
 
-    fetch("http://127.0.0.1:5000/Signup", {
+    fetch("https://nexus-project-webserver.onrender.com/Signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ Name: name, Email: email, Password: password })
@@ -311,7 +311,7 @@ function initCatalog() {
   searchInput?.addEventListener("input", applyFilters);
 
   
-  fetch("http://127.0.0.1:5000/Products")
+  fetch("https://nexus-project-webserver.onrender.com/Products")
     .then(res => res.json())
     .then(data => {
       // convert backend fields to frontend fields
@@ -613,7 +613,7 @@ placeOrderBtn.addEventListener("click", () => {
     }))
   };
 
-  fetch("http://127.0.0.1:5000/Orders", {
+  fetch("https://nexus-project-webserver.onrender.com/Orders", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(orderPayload)
@@ -655,7 +655,7 @@ function initOrdersPage() {
   cart = loadCart();
   updateCartCount();
 
-  fetch(`http://127.0.0.1:5000/Orders/user/${user.User_ID}`)
+  fetch(`https://nexus-project-webserver.onrender.com/Orders/user/${user.User_ID}`)
     .then(res => res.json())
     .then(orders => {
       if (!orders.length) {
