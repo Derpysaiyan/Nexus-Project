@@ -2,7 +2,7 @@ import sqlite3
 
 DB_PATH = "Nexus.db"
 
-IMAGE_PATH = "Images/"   # frontend relative folder
+IMAGE_PATH = "assets/Images/"# frontend relative folder
 
 def seed():
     conn = sqlite3.connect(DB_PATH)
