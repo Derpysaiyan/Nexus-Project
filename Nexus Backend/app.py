@@ -3,7 +3,7 @@ import os
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import sqlite3
-
+from werkzeug.security import generate_password_hash, check_password_hash
 
 
 # 200 is good
@@ -280,13 +280,15 @@ def create_user():
     password = data.get("Password")
     role = data.get("Role")
 
+    hashed_pw = generate_password_hash(password)
+
     conn = sqlite3.connect("Nexus.db")
     cur = conn.cursor()
     try:
         cur.execute("""
             INSERT INTO User (Name, Email, Password, Role) 
             VALUES(?,?,?,?)
-            """, (name,email,password,role,))
+            """, (name,email,hashed_pw,role,))
         conn.commit()
 
     except sqlite3.IntegrityError:
@@ -300,7 +302,7 @@ def create_user():
 
 
 #login information
-@app.route("/Login", methods = ["POST"])
+@app.route("/Login", methods=["POST"])
 def login():
     data = request.get_json()
 
@@ -311,23 +313,26 @@ def login():
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
 
-    cur.execute("Select * FROM User WHERE Email = ?", (email,))
+    cur.execute("SELECT * FROM User WHERE Email = ?", (email,))
     user = cur.fetchone()
     conn.close()
 
     if user is None:
-        return jsonify({"error": "Email or Password is Invalid"}),401
+        return jsonify({"error": "Email or Password is Invalid"}), 401
 
-    if password != user["Password"]:
-        return jsonify({"error": "Invalid email or Password"}),401
-
+    # Secure password check
+    if not check_password_hash(user["Password"], password):
+        return jsonify({"error": "Email or Password is Invalid"}), 401
 
     return jsonify({
-        "message": "Login succesful",
+        "message": "Login successful",
         "User_ID": user["User_ID"],
         "Name": user["Name"],
         "Role": user["Role"]
     }), 200
+
+
+
 
 # get Users multiple
 @app.route("/Users", methods = ["GET"])
@@ -373,6 +378,7 @@ def update_user(user_id):
         conn.close()
         return jsonify({"error": "User can not be found"}), 404
 
+    hashed_pw = generate_password_hash(data.get("Password"))
     # Update
     try:
         cur.execute("""
@@ -382,7 +388,7 @@ def update_user(user_id):
         """, (
             data.get("Name"),
             data.get("Email"),
-            data.get("Password"),
+            hashed_pw,
             data.get("Role"),
             user_id
         ))
@@ -590,6 +596,8 @@ def signup():
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
 
+    hashed_ps = generate_password_hash(password)
+
     # check if email already exists
     cur.execute("SELECT * FROM User WHERE Email = ?", (email,))
     existing = cur.fetchone()
@@ -602,7 +610,7 @@ def signup():
     cur.execute("""
         INSERT INTO User (Name, Email, Password, Role)
         VALUES (?, ?, ?, 'customer')
-    """, (name, email, password))
+    """, (name, email, hashed_ps))
 
     conn.commit()
 

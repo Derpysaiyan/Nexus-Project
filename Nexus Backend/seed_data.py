@@ -1,4 +1,5 @@
 import sqlite3
+from werkzeug.security import generate_password_hash
 
 DB_PATH = "Nexus.db"
 
@@ -65,9 +66,9 @@ def seed():
 
 
     fake_users = [
-        ("John Doe", "john@example.com", "password123", "Customer"),
-        ("Alice Smith", "alice@example.com", "alicepass", "Customer"),
-        ("Admin User", "admin@example.com", "admin123", "Admin")
+        ("John Doe", "john@example.com", generate_password_hash("password123"), "Customer"),
+        ("Alice Smith", "alice@example.com", generate_password_hash("alicepass"), "Customer"),
+        ("Admin User", "admin@example.com", generate_password_hash("admin123"), "Admin")
     ]
 
     for u in fake_users:
