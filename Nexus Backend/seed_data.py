@@ -23,7 +23,7 @@ def seed():
          899,  IMAGE_PATH + "Iphone15_128gb.jpg",   25, 4.8, 312),
 
         (brand_map["Apple"], "iPhone 15 256GB", "256GB model of iPhone 15", 
-         999,  IMAGE_PATH + "Iphone15_256gb.jpg",   20, 4.7, 184),
+         999,  IMAGE_PATH + "Iphone_256gb.jpg",   20, 4.7, 184),
 
         (brand_map["Apple"], "iPhone 15 Pro 128GB", "Premium 128GB iPhone 15 Pro",
          1099, IMAGE_PATH + "Iphone15Pro_128gb.jpg", 18, 4.9, 420),
